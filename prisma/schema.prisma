@@ -29,6 +29,7 @@ model Song {
   artist      String
   album       String
   lyrics      Json
+  cover       String
   duration    Int
   filePath    String   
   fileHash    String  
