@@ -44,6 +44,12 @@ export class AuthService {
     }
 
     async refreshToken(refreshToken: string) {
+        if (!refreshToken) {
+            return {
+                statusCode: HttpStatus.UNAUTHORIZED,
+                message: 'refreshToken失效，请重新登录'
+            }
+        }
         const { sub: userId } = this.jwtService.verify(refreshToken)
         const user = await this.prisma.user.findUnique({
             where: {
