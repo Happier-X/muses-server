@@ -131,9 +131,7 @@ export class UtilsService {
             } else {
                 musicInfo.cover = ''
             }
-            musicInfo.duration = res.format.duration
-                ? Math.round(res.format.duration)
-                : 0
+            musicInfo.duration = res.format.duration || 0
             return musicInfo
         } catch (error) {
             console.error(`解析音乐文件信息失败: ${filePath}`, error)
