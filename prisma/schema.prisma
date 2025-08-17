@@ -19,6 +19,7 @@ model User {
   username  String   @unique
   password  String
   role      String   @default("user")
+  queue QueueItem[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -37,10 +38,25 @@ model Song {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   @@unique([filePath,fileHash])
+  queueItems QueueItem[]
 }
 
 model Config {
   id    Int    @id @default(autoincrement())
   key   String @unique
   value String
+}
+
+model QueueItem{
+  id Int @id @default(autoincrement())
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  userId Int
+  song Song @relation(fields:[songId],references:[id],onDelete:Cascade)
+  songId Int
+  position Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@unique([userId,position])
+  @@unique([userId,songId])
+  @@index([userId])
 }
