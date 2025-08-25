@@ -33,4 +33,19 @@ export class QueueItemsController {
             req.user
         )
     }
+
+    @Get('previous')
+    getPreviousSong(
+        @Query('currentSongId')
+        currentSongId: string,
+        @Query('playMode')
+        playMode: string,
+        @Req() req: Request
+    ) {
+        return this.queueItemsService.getPreviousSong(
+            Number(currentSongId),
+            playMode,
+            req.user
+        )
+    }
 }
