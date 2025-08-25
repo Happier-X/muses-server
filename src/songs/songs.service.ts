@@ -40,27 +40,27 @@ export class SongsService {
         return this.prisma.song.findMany()
     }
 
-    // 增加播放次数
-    async addPlayCount(id: number) {
-        return this.prisma.song.update({
-            where: { id },
-            data: { playCount: { increment: 1 } }
-        })
-    }
+    // // 增加播放次数
+    // async addPlayCount(id: number) {
+    //     return this.prisma.song.update({
+    //         where: { id },
+    //         data: { playCount: { increment: 1 } }
+    //     })
+    // }
 
-    // 获取播放次数最少的歌曲
-    async getMinPlayCountSong(ids: string) {
-        return this.prisma.song.findFirst({
-            where: {
-                id: {
-                    in: ids.split(',').map((id) => Number(id))
-                }
-            },
-            orderBy: {
-                playCount: 'asc'
-            }
-        })
-    }
+    // // 获取播放次数最少的歌曲
+    // async getMinPlayCountSong(ids: string) {
+    //     return this.prisma.song.findFirst({
+    //         where: {
+    //             id: {
+    //                 in: ids.split(',').map((id) => Number(id))
+    //             }
+    //         },
+    //         orderBy: {
+    //             playCount: 'asc'
+    //         }
+    //     })
+    // }
 
     // 获取歌曲详情
     async getSongDetail(id: number) {

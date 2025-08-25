@@ -20,6 +20,7 @@ model User {
   password  String
   role      String   @default("user")
   queue QueueItem[]
+  playRecord PlayRecord[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -34,11 +35,11 @@ model Song {
   duration    Int
   filePath    String   
   fileHash    String  
-  playCount   Int @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   @@unique([filePath,fileHash])
   queueItems QueueItem[]
+  playRecord PlayRecord[]
 }
 
 model Config {
@@ -59,4 +60,16 @@ model QueueItem{
   @@unique([userId,position])
   @@unique([userId,songId])
   @@index([userId])
+}
+
+model PlayRecord{
+  id Int @id @default(autoincrement())
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  userId Int
+  song Song @relation(fields:[songId],references:[id],onDelete:Cascade)
+  songId Int
+  playCount Int @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@unique([userId,songId])
 }

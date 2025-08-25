@@ -31,7 +31,7 @@ export class AuthController {
     }
 
     @Public()
-    @Get('refreshToken')
+    @Get('refresh-token')
     refreshToken(@Req() req: Request) {
         return this.authService.refreshToken(
             req.headers['refresh-token'] as string

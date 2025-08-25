@@ -76,6 +76,9 @@ export class UtilsService {
         }
         await this.cleanDeletedFiles()
         await this.saveLastScanTime()
+        return {
+            message: '扫描完成'
+        }
     }
 
     /**
