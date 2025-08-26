@@ -36,8 +36,20 @@ export class SongsService {
     }
 
     // 获取歌曲列表
-    async getSongsList() {
-        return this.prisma.song.findMany()
+    async getSongsList(page, pageSize) {
+        const total = await this.prisma.song.count()
+        const songs = await this.prisma.song.findMany({
+            skip: (page - 1) * pageSize,
+            take: pageSize
+        })
+        return {
+            data: songs,
+            pagination: {
+                total,
+                page,
+                pageSize
+            }
+        }
     }
 
     // // 增加播放次数
