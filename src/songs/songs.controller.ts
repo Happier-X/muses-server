@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Query, Body } from '@nestjs/common'
+import {
+    Controller,
+    Get,
+    Post,
+    Query,
+    Body,
+    ParseIntPipe,
+    DefaultValuePipe
+} from '@nestjs/common'
 import { SongsService } from './songs.service'
 
 @Controller('songs')
@@ -17,10 +25,11 @@ export class SongsController {
 
     @Get('')
     getSongsList(
-        @Query('page') page: number = 1,
-        @Query('pageSize') pageSize: number = 10
+        @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+        @Query('pageSize', new DefaultValuePipe(10), ParseIntPipe)
+        pageSize: number
     ) {
-        return this.songsService.getSongsList(page, pageSize)
+        return this.songsService.getSongsList(Number(page), pageSize)
     }
 
     // @Post('play-count')
