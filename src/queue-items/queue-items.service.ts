@@ -5,6 +5,114 @@ import { PrismaService } from 'src/prisma/prisma.service'
 export class QueueItemsService {
     constructor(private readonly prisma: PrismaService) {}
 
+    private async getRandomSongByWeight(currentSongId: number, user: any) {
+        const queueItems = await this.prisma.queueItem.findMany({
+            where: {
+                userId: user.id,
+                songId: {
+                    not: currentSongId
+                }
+            },
+            select: {
+                songId: true
+            },
+            orderBy: {
+                position: 'asc'
+            }
+        })
+        if (queueItems.length === 0) {
+            return null
+        }
+        const songIds = queueItems.map((item) => item.songId)
+
+        // 获取最近播放的歌曲（最近30分钟内播放的）
+        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000)
+        const recentlyPlayedSongs = await this.prisma.playRecord.findMany({
+            where: {
+                userId: user.id,
+                songId: {
+                    in: songIds
+                },
+                updatedAt: {
+                    gte: thirtyMinutesAgo
+                }
+            },
+            select: {
+                songId: true
+            }
+        })
+        const recentlyPlayedSongIds = recentlyPlayedSongs.map(
+            (record) => record.songId
+        )
+
+        // 获取所有歌曲的播放记录，包括未播放的歌曲
+        const playRecords = await this.prisma.playRecord.findMany({
+            where: {
+                userId: user.id,
+                songId: {
+                    in: songIds
+                }
+            },
+            select: {
+                songId: true,
+                playCount: true
+            }
+        })
+
+        // 创建播放次数映射
+        const playCountMap = new Map()
+        playRecords.forEach((record) => {
+            playCountMap.set(record.songId, record.playCount)
+        })
+
+        // 计算所有歌曲的权重
+        const songWeights = songIds.map((songId) => {
+            const playCount = playCountMap.get(songId) || 0
+            let weight = 1 / (playCount + 1)
+
+            // 如果是最近播放过的歌曲，大幅降低权重
+            if (recentlyPlayedSongIds.includes(songId)) {
+                weight *= 0.1 // 权重降低到原来的10%
+            }
+
+            return { songId, weight }
+        })
+
+        // 计算总权重
+        const totalWeight = songWeights.reduce(
+            (sum, item) => sum + item.weight,
+            0
+        )
+
+        // 随机选择
+        const random = Math.random() * totalWeight
+        let currentWeight = 0
+        let selectedSongId = songIds[0] // 默认值
+
+        for (const item of songWeights) {
+            currentWeight += item.weight
+            if (random <= currentWeight) {
+                selectedSongId = item.songId
+                break
+            }
+        }
+
+        const song = await this.prisma.song.findUnique({
+            where: {
+                id: selectedSongId
+            },
+            select: {
+                id: true,
+                title: true,
+                artist: true,
+                album: true,
+                cover: true,
+                duration: true
+            }
+        })
+        return song
+    }
+
     async addToPlayQueue(songIdList: string[], user: any) {
         const { id: userId } = user
         const maxPositionItem = await this.prisma.queueItem.findFirst({
@@ -112,89 +220,7 @@ export class QueueItemsService {
             }
             return nextSong?.song
         } else if (playMode === 'randomPlay') {
-            const queueItems = await this.prisma.queueItem.findMany({
-                where: {
-                    userId: user.id,
-                    songId: {
-                        not: currentSongId
-                    }
-                },
-                select: {
-                    songId: true
-                },
-                orderBy: {
-                    position: 'asc'
-                }
-            })
-            if (queueItems.length === 0) {
-                return null
-            }
-            const songIds = queueItems.map((item) => item.songId)
-            const playedSongs = await this.prisma.playRecord.findMany({
-                where: {
-                    userId: user.id,
-                    songId: {
-                        in: songIds
-                    }
-                },
-                select: {
-                    songId: true
-                }
-            })
-            const playedSongIds = playedSongs.map((item) => item.songId)
-            const unplayedSongs = songIds.filter(
-                (id) => !playedSongIds.includes(id)
-            )
-            if (unplayedSongs.length > 0) {
-                const randomIndex = Math.floor(
-                    Math.random() * unplayedSongs.length
-                )
-                const songId = unplayedSongs[randomIndex]
-                const song = await this.prisma.song.findUnique({
-                    where: {
-                        id: songId
-                    },
-                    select: {
-                        id: true,
-                        title: true,
-                        artist: true,
-                        album: true,
-                        cover: true,
-                        duration: true
-                    }
-                })
-                return song
-            }
-            const lastPlayedSongs = await this.prisma.playRecord.findMany({
-                where: {
-                    userId: user.id,
-                    songId: {
-                        in: songIds
-                    }
-                },
-                orderBy: {
-                    playCount: 'asc'
-                },
-                select: {
-                    song: {
-                        select: {
-                            id: true,
-                            title: true,
-                            artist: true,
-                            album: true,
-                            cover: true,
-                            duration: true
-                        }
-                    }
-                }
-            })
-            if (lastPlayedSongs.length > 0) {
-                const randomIndex = Math.floor(
-                    Math.random() * lastPlayedSongs.length
-                )
-                return lastPlayedSongs[randomIndex].song
-            }
-            return null
+            return await this.getRandomSongByWeight(currentSongId, user)
         }
     }
 
@@ -257,89 +283,7 @@ export class QueueItemsService {
             }
             return previousSong?.song
         } else if (playMode === 'randomPlay') {
-            const queueItems = await this.prisma.queueItem.findMany({
-                where: {
-                    userId: user.id,
-                    songId: {
-                        not: currentSongId
-                    }
-                },
-                select: {
-                    songId: true
-                },
-                orderBy: {
-                    position: 'asc'
-                }
-            })
-            if (queueItems.length === 0) {
-                return null
-            }
-            const songIds = queueItems.map((item) => item.songId)
-            const playedSongs = await this.prisma.playRecord.findMany({
-                where: {
-                    userId: user.id,
-                    songId: {
-                        in: songIds
-                    }
-                },
-                select: {
-                    songId: true
-                }
-            })
-            const playedSongIds = playedSongs.map((item) => item.songId)
-            const unplayedSongs = songIds.filter(
-                (id) => !playedSongIds.includes(id)
-            )
-            if (unplayedSongs.length > 0) {
-                const randomIndex = Math.floor(
-                    Math.random() * unplayedSongs.length
-                )
-                const songId = unplayedSongs[randomIndex]
-                const song = await this.prisma.song.findUnique({
-                    where: {
-                        id: songId
-                    },
-                    select: {
-                        id: true,
-                        title: true,
-                        artist: true,
-                        album: true,
-                        cover: true,
-                        duration: true
-                    }
-                })
-                return song
-            }
-            const lastPlayedSongs = await this.prisma.playRecord.findMany({
-                where: {
-                    userId: user.id,
-                    songId: {
-                        in: songIds
-                    }
-                },
-                orderBy: {
-                    playCount: 'asc'
-                },
-                select: {
-                    song: {
-                        select: {
-                            id: true,
-                            title: true,
-                            artist: true,
-                            album: true,
-                            cover: true,
-                            duration: true
-                        }
-                    }
-                }
-            })
-            if (lastPlayedSongs.length > 0) {
-                const randomIndex = Math.floor(
-                    Math.random() * lastPlayedSongs.length
-                )
-                return lastPlayedSongs[randomIndex].song
-            }
-            return null
+            return await this.getRandomSongByWeight(currentSongId, user)
         }
     }
 }
