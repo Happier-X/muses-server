@@ -35,18 +35,21 @@ export class AuthService {
     async login(user: any) {
         const payload = { username: user.username, sub: user.id }
         return {
-            statusCode: HttpStatus.CREATED,
-            access_token: this.jwtService.sign(payload),
-            refresh_token: this.jwtService.sign(payload, {
-                expiresIn: '14d'
-            })
+            code: HttpStatus.OK,
+            message: '登录成功',
+            data: {
+                accessToken: this.jwtService.sign(payload),
+                refreshToken: this.jwtService.sign(payload, {
+                    expiresIn: '14d'
+                })
+            }
         }
     }
 
     async refreshToken(refreshToken: string) {
         if (!refreshToken) {
             return {
-                statusCode: HttpStatus.UNAUTHORIZED,
+                code: HttpStatus.UNAUTHORIZED,
                 message: 'refreshToken失效，请重新登录'
             }
         }
@@ -59,15 +62,18 @@ export class AuthService {
         if (user) {
             const payload = { username: user.username, sub: user.id }
             return {
-                statusCode: HttpStatus.CREATED,
-                access_token: this.jwtService.sign(payload),
-                refresh_token: this.jwtService.sign(payload, {
-                    expiresIn: '14d'
-                })
+                code: HttpStatus.OK,
+                message: '刷新成功',
+                data: {
+                    accessToken: this.jwtService.sign(payload),
+                    refreshToken: this.jwtService.sign(payload, {
+                        expiresIn: '14d'
+                    })
+                }
             }
         }
         return {
-            statusCode: HttpStatus.UNAUTHORIZED,
+            code: HttpStatus.UNAUTHORIZED,
             message: 'refreshToken失效，请重新登录'
         }
     }

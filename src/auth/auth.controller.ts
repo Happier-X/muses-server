@@ -2,6 +2,8 @@ import {
     Body,
     Controller,
     Get,
+    HttpCode,
+    HttpStatus,
     Post,
     Query,
     Req,
@@ -20,6 +22,7 @@ export class AuthController {
     @Public()
     @UseGuards(LocalAuthGuard)
     @Post('login')
+    @HttpCode(HttpStatus.OK)
     login(@Req() req: Request) {
         return this.authService.login(req.user)
     }
