@@ -35,14 +35,10 @@ export class AuthService {
     async login(user: any) {
         const payload = { username: user.username, sub: user.id }
         return {
-            code: HttpStatus.OK,
-            message: '登录成功',
-            data: {
-                accessToken: this.jwtService.sign(payload),
-                refreshToken: this.jwtService.sign(payload, {
-                    expiresIn: '14d'
-                })
-            }
+            accessToken: this.jwtService.sign(payload),
+            refreshToken: this.jwtService.sign(payload, {
+                expiresIn: '30d'
+            })
         }
     }
 

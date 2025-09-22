@@ -5,11 +5,11 @@ import {
     HttpCode,
     HttpStatus,
     Post,
-    Query,
+    Res,
     Req,
     UseGuards
 } from '@nestjs/common'
-import { Request } from 'express'
+import { Request, Response } from 'express'
 import { AuthService } from './auth.service'
 import { Public } from './decorator/auth.decorator'
 import { RegisterDto } from './dto/register.dto'
@@ -23,8 +23,25 @@ export class AuthController {
     @UseGuards(LocalAuthGuard)
     @Post('login')
     @HttpCode(HttpStatus.OK)
-    login(@Req() req: Request) {
-        return this.authService.login(req.user)
+    async login(
+        @Req() req: Request,
+        @Res({ passthrough: true }) res: Response
+    ) {
+        const { accessToken, refreshToken } = await this.authService.login(
+            req.user
+        )
+        res.cookie('accessToken', accessToken, {
+            httpOnly: true,
+            maxAge: 30 * 24 * 60 * 60 * 1000
+        })
+        return {
+            code: HttpStatus.OK,
+            message: '登录成功',
+            data: {
+                accessToken,
+                refreshToken
+            }
+        }
     }
 
     @Public()
