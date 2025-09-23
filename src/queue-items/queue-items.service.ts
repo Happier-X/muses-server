@@ -5,12 +5,12 @@ import { PrismaService } from 'src/prisma/prisma.service'
 export class QueueItemsService {
     constructor(private readonly prisma: PrismaService) {}
 
-    private async getRandomSongByWeight(currentSongId: number, user: any) {
+    private async getRandomSongByWeight(currentQueueItemId: number, user: any) {
         const queueItems = await this.prisma.queueItem.findMany({
             where: {
                 userId: user.id,
                 songId: {
-                    not: currentSongId
+                    not: currentQueueItemId
                 }
             },
             select: {
@@ -102,12 +102,7 @@ export class QueueItemsService {
                 id: selectedSongId
             },
             select: {
-                id: true,
-                title: true,
-                artist: true,
-                album: true,
-                cover: true,
-                duration: true
+                id: true
             }
         })
         return song
@@ -161,13 +156,17 @@ export class QueueItemsService {
         })
     }
 
-    async getNextSong(currentSongId: number, playMode: string, user: any) {
+    async getNextQueueItem(
+        currentQueueItemId: number,
+        playMode: string,
+        user: any
+    ) {
         if (playMode === 'orderPlay') {
             const currentItem = await this.prisma.queueItem.findUnique({
                 where: {
                     userId_songId: {
                         userId: user.id,
-                        songId: currentSongId
+                        songId: currentQueueItemId
                     }
                 },
                 select: {
@@ -185,12 +184,7 @@ export class QueueItemsService {
                 include: {
                     song: {
                         select: {
-                            id: true,
-                            title: true,
-                            artist: true,
-                            album: true,
-                            cover: true,
-                            duration: true
+                            id: true
                         }
                     }
                 }
@@ -206,12 +200,7 @@ export class QueueItemsService {
                     include: {
                         song: {
                             select: {
-                                id: true,
-                                title: true,
-                                artist: true,
-                                album: true,
-                                cover: true,
-                                duration: true
+                                id: true
                             }
                         }
                     }
@@ -220,17 +209,21 @@ export class QueueItemsService {
             }
             return nextSong?.song
         } else if (playMode === 'randomPlay') {
-            return await this.getRandomSongByWeight(currentSongId, user)
+            return await this.getRandomSongByWeight(currentQueueItemId, user)
         }
     }
 
-    async getPreviousSong(currentSongId: number, playMode: string, user: any) {
+    async getPreviousQueueItem(
+        currentQueueItemId: number,
+        playMode: string,
+        user: any
+    ) {
         if (playMode === 'orderPlay') {
             const currentItem = await this.prisma.queueItem.findUnique({
                 where: {
                     userId_songId: {
                         userId: user.id,
-                        songId: currentSongId
+                        songId: currentQueueItemId
                     }
                 },
                 select: {
@@ -248,12 +241,7 @@ export class QueueItemsService {
                 include: {
                     song: {
                         select: {
-                            id: true,
-                            title: true,
-                            artist: true,
-                            album: true,
-                            cover: true,
-                            duration: true
+                            id: true
                         }
                     }
                 }
@@ -269,12 +257,7 @@ export class QueueItemsService {
                     include: {
                         song: {
                             select: {
-                                id: true,
-                                title: true,
-                                artist: true,
-                                album: true,
-                                cover: true,
-                                duration: true
+                                id: true
                             }
                         }
                     }
@@ -283,7 +266,7 @@ export class QueueItemsService {
             }
             return previousSong?.song
         } else if (playMode === 'randomPlay') {
-            return await this.getRandomSongByWeight(currentSongId, user)
+            return await this.getRandomSongByWeight(currentQueueItemId, user)
         }
     }
 }

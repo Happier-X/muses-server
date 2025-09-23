@@ -20,30 +20,30 @@ export class QueueItemsController {
     }
 
     @Get('next')
-    getNextSong(
-        @Query('currentSongId')
-        currentSongId: string,
+    getNextQueueItem(
+        @Query('currentQueueItemId')
+        currentQueueItemId: string,
         @Query('playMode')
         playMode: string,
         @Req() req: Request
     ) {
-        return this.queueItemsService.getNextSong(
-            Number(currentSongId),
+        return this.queueItemsService.getNextQueueItem(
+            Number(currentQueueItemId),
             playMode,
             req.user
         )
     }
 
     @Get('previous')
-    getPreviousSong(
-        @Query('currentSongId')
-        currentSongId: string,
+    getPreviousQueueItem(
+        @Query('currentQueueItemId')
+        currentQueueItemId: string,
         @Query('playMode')
         playMode: string,
         @Req() req: Request
     ) {
-        return this.queueItemsService.getPreviousSong(
-            Number(currentSongId),
+        return this.queueItemsService.getPreviousQueueItem(
+            Number(currentQueueItemId),
             playMode,
             req.user
         )
