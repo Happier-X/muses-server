@@ -43,7 +43,7 @@ export class SongsController {
     // }
 
     @Get('detail')
-    getSongDetail(@Query('id') id: string) {
-        return this.songsService.getSongDetail(Number(id))
+    getSongDetail(@Query('songId') songId: string) {
+        return this.songsService.getSongDetail(Number(songId))
     }
 }

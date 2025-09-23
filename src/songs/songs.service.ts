@@ -1,4 +1,4 @@
-import { Injectable, StreamableFile } from '@nestjs/common'
+import { HttpStatus, Injectable, StreamableFile } from '@nestjs/common'
 import { createReadStream } from 'fs'
 import { extname, join } from 'path'
 import { PrismaService } from 'src/prisma/prisma.service'
@@ -75,7 +75,11 @@ export class SongsService {
     // }
 
     // 获取歌曲详情
-    async getSongDetail(id: number) {
-        return this.prisma.song.findUnique({ where: { id } })
+    async getSongDetail(songId: number) {
+        return {
+            code: HttpStatus.OK,
+            message: '获取歌曲详情成功',
+            data: await this.prisma.song.findUnique({ where: { id: songId } })
+        }
     }
 }
