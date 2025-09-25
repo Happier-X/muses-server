@@ -23,25 +23,8 @@ export class AuthController {
     @UseGuards(LocalAuthGuard)
     @Post('login')
     @HttpCode(HttpStatus.OK)
-    async login(
-        @Req() req: Request,
-        @Res({ passthrough: true }) res: Response
-    ) {
-        const { accessToken, refreshToken } = await this.authService.login(
-            req.user
-        )
-        res.cookie('accessToken', accessToken, {
-            httpOnly: true,
-            maxAge: 30 * 24 * 60 * 60 * 1000
-        })
-        return {
-            code: HttpStatus.OK,
-            message: '登录成功',
-            data: {
-                accessToken,
-                refreshToken
-            }
-        }
+    login(@Req() req: Request) {
+        return this.authService.login(req.user)
     }
 
     @Public()

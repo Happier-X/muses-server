@@ -9,8 +9,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         super({
             jwtFromRequest: ExtractJwt.fromExtractors([
                 ExtractJwt.fromAuthHeaderAsBearerToken(),
-                (request) => {
-                    return request?.cookies?.accessToken
+                (req): string | null => {
+                    if (req.url.includes('/songs/stream')) {
+                        const searchParams = new URLSearchParams(
+                            req.url.split('?')[1]
+                        )
+                        const accessToken = searchParams.get('accessToken')
+                        return accessToken
+                    }
+                    return null
                 }
             ]),
             ignoreExpiration: false,
