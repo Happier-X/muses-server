@@ -36,18 +36,22 @@ export class SongsService {
     }
 
     // 获取歌曲列表
-    async getSongsList(page, pageSize) {
+    async getSongs(page, size) {
         const total = await this.prisma.song.count()
         const songs = await this.prisma.song.findMany({
-            skip: (page - 1) * pageSize,
-            take: pageSize
+            skip: (page - 1) * size,
+            take: size
         })
         return {
-            data: songs,
-            pagination: {
-                total,
-                page,
-                pageSize
+            code: HttpStatus.OK,
+            message: '获取歌曲列表成功',
+            data: {
+                items: songs,
+                pagination: {
+                    page,
+                    size,
+                    total
+                }
             }
         }
     }

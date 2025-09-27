@@ -24,12 +24,12 @@ export class SongsController {
     }
 
     @Get('')
-    getSongsList(
+    getSongs(
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-        @Query('pageSize', new DefaultValuePipe(10), ParseIntPipe)
-        pageSize: number
+        @Query('size', new DefaultValuePipe(10), ParseIntPipe)
+        size: number
     ) {
-        return this.songsService.getSongsList(Number(page), pageSize)
+        return this.songsService.getSongs(Number(page), size)
     }
 
     // @Post('play-count')
