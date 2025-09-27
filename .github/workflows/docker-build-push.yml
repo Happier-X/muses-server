@@ -1,6 +1,5 @@
 name: Build & Push Docker Image
 
-# 触发条件：push 到 main 分支，或手动点击 Run workflow
 on:
   push:
     branches: [ "main" ]
@@ -10,42 +9,34 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      # 1. 拉代码
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 2. 登录 Docker Hub
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 3. 解析出 git 短 sha，当镜像 tag 的一部分，方便溯源
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/muses-server   # ← 改成自己的仓库名
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/muses-server
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=sha,prefix={{branch}}-
+            type=raw,value=latest          # ← 新增：每次都打 latest
+            type=sha,prefix={{branch}}-    # ← 原有：带 git 短 sha 的标签，可保留
 
-      # 4. 设置 QEMU + Buildx（为了多架构构建，可省）
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # 5. 真正构建 + 推送
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          context: .          # Dockerfile 所在目录
+          context: .
+          file: ./dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # 如果 Dockerfile 名字不是 Dockerfile，或不在根目录，改这里
-          file: ./dockerfile
