@@ -13,7 +13,7 @@ interface MusicInfo {
     title: string
     artist: string
     album: string
-    lyrics: ILyricsTag[]
+    lyric: ILyricsTag[]
     cover: string
     duration: number
 }
@@ -116,7 +116,7 @@ export class UtilsService {
             title: '',
             artist: '',
             album: '',
-            lyrics: [],
+            lyric: [],
             cover: '',
             duration: 0
         }
@@ -128,7 +128,7 @@ export class UtilsService {
             musicInfo.title = res.common.title || ''
             musicInfo.artist = res.common.artist || ''
             musicInfo.album = res.common.album || ''
-            musicInfo.lyrics = res.common.lyrics || []
+            musicInfo.lyric = res.common.lyrics || []
             if (res.common.picture && res.common.picture.length > 0) {
                 musicInfo.cover = `data:${res.common.picture[0].format};base64,${uint8ArrayToBase64(res.common.picture[0].data)}`
             } else {
@@ -172,7 +172,7 @@ export class UtilsService {
             artist: musicInfo.artist,
             album: musicInfo.album,
             cover: musicInfo.cover,
-            lyrics: JSON.stringify(musicInfo.lyrics),
+            lyric: JSON.stringify(musicInfo.lyric),
             duration: musicInfo.duration,
             filePath,
             fileHash
