@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common'
+import { HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common'
 import { UsersService } from 'src/users/users.service'
 import * as argon2 from 'argon2'
 import { RegisterDto } from './dto/register.dto'
@@ -48,10 +48,10 @@ export class AuthService {
 
     async refreshToken(refreshToken: string) {
         if (!refreshToken) {
-            return {
+            throw new UnauthorizedException({
                 code: HttpStatus.UNAUTHORIZED,
                 message: 'refreshToken失效，请重新登录'
-            }
+            })
         }
         const { sub: userId } = this.jwtService.verify(refreshToken)
         const user = await this.prisma.user.findUnique({
@@ -72,9 +72,9 @@ export class AuthService {
                 }
             }
         }
-        return {
+        throw new UnauthorizedException({
             code: HttpStatus.UNAUTHORIZED,
             message: 'refreshToken失效，请重新登录'
-        }
+        })
     }
 }
