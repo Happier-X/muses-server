@@ -49,32 +49,35 @@ export class AuthService {
     async refreshToken(refreshToken: string) {
         if (!refreshToken) {
             throw new UnauthorizedException({
-                code: HttpStatus.UNAUTHORIZED,
-                message: 'refreshToken失效，请重新登录'
+                code: 40102,
+                message: '登录过期，请重新登录'
             })
         }
-        const { sub: userId } = this.jwtService.verify(refreshToken)
-        const user = await this.prisma.user.findUnique({
-            where: {
-                id: userId
-            }
-        })
-        if (user) {
-            const payload = { username: user.username, sub: user.id }
-            return {
-                code: HttpStatus.OK,
-                message: '刷新成功',
-                data: {
-                    accessToken: this.jwtService.sign(payload),
-                    refreshToken: this.jwtService.sign(payload, {
-                        expiresIn: '30d'
-                    })
+        try {
+            const { sub: userId } = this.jwtService.verify(refreshToken)
+            const user = await this.prisma.user.findUnique({
+                where: {
+                    id: userId
+                }
+            })
+            if (user) {
+                const payload = { username: user.username, sub: user.id }
+                return {
+                    code: HttpStatus.OK,
+                    message: '刷新成功',
+                    data: {
+                        accessToken: this.jwtService.sign(payload),
+                        refreshToken: this.jwtService.sign(payload, {
+                            expiresIn: '30d'
+                        })
+                    }
                 }
             }
+        } catch (error) {
+            throw new UnauthorizedException({
+                code: 40102,
+                message: '登录过期，请重新登录'
+            })
         }
-        throw new UnauthorizedException({
-            code: HttpStatus.UNAUTHORIZED,
-            message: 'refreshToken失效，请重新登录'
-        })
     }
 }
