@@ -36,7 +36,7 @@ export class SongsService {
     }
 
     // 获取歌曲列表
-    async getSongs(page, size) {
+    async getSongs(page: number, size: number) {
         const total = await this.prisma.song.count()
         const songs = await this.prisma.song.findMany({
             skip: (page - 1) * size,
