@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { createHash } from 'crypto'
 import { createReadStream } from 'fs'
 import { ILyricsTag } from 'music-metadata'
+import { mkdirSync } from 'fs'
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import { PrismaService } from 'src/prisma/prisma.service'
@@ -130,7 +131,14 @@ export class UtilsService {
             musicInfo.album = res.common.album || ''
             musicInfo.lyric = res.common.lyrics || []
             if (res.common.picture && res.common.picture.length > 0) {
-                musicInfo.cover = `data:${res.common.picture[0].format};base64,${uint8ArrayToBase64(res.common.picture[0].data)}`
+                mkdirSync(path.join('public', 'covers'), { recursive: true })
+                const ext = res.common.picture[0].format.split('/')[1] ?? 'jpg'
+                const fileName = `${Date.now()}.${ext}`
+                await fs.writeFile(
+                    path.join('public', 'covers', fileName),
+                    res.common.picture[0].data
+                )
+                musicInfo.cover = `/covers/${fileName}`
             } else {
                 musicInfo.cover = ''
             }
