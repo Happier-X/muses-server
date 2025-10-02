@@ -55,11 +55,11 @@ model QueueItem{
   song Song @relation(fields:[songId],references:[id],onDelete:Cascade)
   songId Int
   position Int
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  @@unique([userId,position])
+  originalPosition Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   @@unique([userId,songId])
-  @@index([userId])
+  @@index([userId, position])
 }
 
 model PlayRecord{
