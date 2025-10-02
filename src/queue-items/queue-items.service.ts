@@ -7,17 +7,38 @@ export class QueueItemsService {
 
     async addToPlayQueue(songIdList: string[], user: any) {
         const { id: userId } = user
+
+        // 检查队列是否为空
+        const queueCount = await this.prisma.queueItem.count({
+            where: { userId }
+        })
+
+        const isEmptyQueue = queueCount === 0
+
         const maxPositionItem = await this.prisma.queueItem.findFirst({
             where: { userId },
-            orderBy: { position: 'desc' }
+            orderBy: { shufflePosition: 'desc' }
         })
-        let nextPosition = maxPositionItem ? maxPositionItem.position + 1 : 0
-        for (let item of songIdList) {
+        let nextPosition = maxPositionItem
+            ? maxPositionItem.shufflePosition + 1
+            : 0
+
+        // 如果队列为空，先随机化歌曲顺序
+        let songsToAdd = songIdList.map((id) => parseInt(id))
+        if (isEmptyQueue && songsToAdd.length > 1) {
+            // Fisher-Yates 洗牌算法
+            for (let i = songsToAdd.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1))
+                ;[songsToAdd[i], songsToAdd[j]] = [songsToAdd[j], songsToAdd[i]]
+            }
+        }
+
+        for (let songId of songsToAdd) {
             const existingItem = await this.prisma.queueItem.findUnique({
                 where: {
                     userId_songId: {
                         userId,
-                        songId: parseInt(item)
+                        songId
                     }
                 }
             })
@@ -25,8 +46,8 @@ export class QueueItemsService {
                 await this.prisma.queueItem.create({
                     data: {
                         userId,
-                        songId: parseInt(item),
-                        position: nextPosition,
+                        songId,
+                        shufflePosition: nextPosition,
                         originalPosition: nextPosition
                     }
                 })
@@ -54,11 +75,21 @@ export class QueueItemsService {
             where: { userId }
         })
 
+        // 随机化歌曲顺序 (Fisher-Yates 洗牌算法)
+        const shuffledSongs = [...allSongs]
+        for (let i = shuffledSongs.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1))
+            ;[shuffledSongs[i], shuffledSongs[j]] = [
+                shuffledSongs[j],
+                shuffledSongs[i]
+            ]
+        }
+
         // 批量创建队列项
-        const queueItems = allSongs.map((song, index) => ({
+        const queueItems = shuffledSongs.map((song, index) => ({
             userId,
             songId: song.id,
-            position: index,
+            shufflePosition: index,
             originalPosition: index
         }))
 
@@ -68,7 +99,8 @@ export class QueueItemsService {
 
         return {
             code: 200,
-            message: '添加成功'
+            message: '添加成功',
+            count: allSongs.length
         }
     }
 
@@ -76,7 +108,7 @@ export class QueueItemsService {
         const { id: userId } = user
         return this.prisma.queueItem.findMany({
             where: { userId },
-            orderBy: { position: 'asc' },
+            orderBy: { shufflePosition: 'asc' },
             include: {
                 song: {
                     select: {
@@ -91,7 +123,7 @@ export class QueueItemsService {
         })
     }
 
-    async getNextQueueItem(currentSongId: number, user: any) {
+    async getNextQueueItem(currentSongId: number, playMode: string, user: any) {
         const currentItem = await this.prisma.queueItem.findUnique({
             where: {
                 userId_songId: {
@@ -100,28 +132,40 @@ export class QueueItemsService {
                 }
             },
             select: {
-                position: true
+                shufflePosition: true,
+                originalPosition: true
             }
         })
         if (!currentItem) {
             return null
         }
+
+        // 根据播放模式选择使用的位置字段
+        const positionField =
+            playMode === 'order' ? 'originalPosition' : 'shufflePosition'
+        const currentPosition =
+            playMode === 'order'
+                ? currentItem.originalPosition
+                : currentItem.shufflePosition
+
         const nextSong = await this.prisma.queueItem.findFirst({
             where: {
                 userId: user.id,
-                position: currentItem.position + 1
+                [positionField]: currentPosition + 1
             },
             select: {
                 songId: true
             }
         })
+
         if (!nextSong) {
+            // 循环到第一首
             const firstSong = await this.prisma.queueItem.findFirst({
                 where: {
                     userId: user.id
                 },
                 orderBy: {
-                    position: 'asc'
+                    [positionField]: 'asc'
                 },
                 select: {
                     songId: true
@@ -132,7 +176,11 @@ export class QueueItemsService {
         return nextSong.songId
     }
 
-    async getPreviousQueueItem(currentSongId: number, user: any) {
+    async getPreviousQueueItem(
+        currentSongId: number,
+        playMode: string,
+        user: any
+    ) {
         const currentItem = await this.prisma.queueItem.findUnique({
             where: {
                 userId_songId: {
@@ -141,28 +189,40 @@ export class QueueItemsService {
                 }
             },
             select: {
-                position: true
+                shufflePosition: true,
+                originalPosition: true
             }
         })
         if (!currentItem) {
             return null
         }
+
+        // 根据播放模式选择使用的位置字段
+        const positionField =
+            playMode === 'order' ? 'originalPosition' : 'shufflePosition'
+        const currentPosition =
+            playMode === 'order'
+                ? currentItem.originalPosition
+                : currentItem.shufflePosition
+
         const previousSong = await this.prisma.queueItem.findFirst({
             where: {
                 userId: user.id,
-                position: currentItem.position - 1
+                [positionField]: currentPosition - 1
             },
             select: {
                 songId: true
             }
         })
+
         if (!previousSong) {
+            // 循环到最后一首
             const lastSong = await this.prisma.queueItem.findFirst({
                 where: {
                     userId: user.id
                 },
                 orderBy: {
-                    position: 'desc'
+                    [positionField]: 'desc'
                 },
                 select: {
                     songId: true
@@ -193,7 +253,7 @@ export class QueueItemsService {
             }
         })
 
-        await this.reorderPositions(userId, queueItem.position)
+        await this.reorderPositions(userId, queueItem.shufflePosition)
 
         return { message: '删除成功' }
     }
@@ -222,7 +282,7 @@ export class QueueItemsService {
             throw new Error('队列项不存在')
         }
 
-        const oldPosition = queueItem.position
+        const oldPosition = queueItem.shufflePosition
 
         const maxPosition =
             (await this.prisma.queueItem.count({
@@ -241,13 +301,13 @@ export class QueueItemsService {
             await this.prisma.queueItem.updateMany({
                 where: {
                     userId,
-                    position: {
+                    shufflePosition: {
                         gt: oldPosition,
                         lte: newPosition
                     }
                 },
                 data: {
-                    position: {
+                    shufflePosition: {
                         decrement: 1
                     }
                 }
@@ -256,13 +316,13 @@ export class QueueItemsService {
             await this.prisma.queueItem.updateMany({
                 where: {
                     userId,
-                    position: {
+                    shufflePosition: {
                         gte: newPosition,
                         lt: oldPosition
                     }
                 },
                 data: {
-                    position: {
+                    shufflePosition: {
                         increment: 1
                     }
                 }
@@ -274,7 +334,7 @@ export class QueueItemsService {
                 id: queueItemId
             },
             data: {
-                position: newPosition
+                shufflePosition: newPosition
             }
         })
 
@@ -287,7 +347,7 @@ export class QueueItemsService {
         const queueItems = await this.prisma.queueItem.findMany({
             where: { userId },
             select: { id: true },
-            orderBy: { position: 'asc' }
+            orderBy: { shufflePosition: 'asc' }
         })
 
         if (queueItems.length === 0) {
@@ -305,47 +365,23 @@ export class QueueItemsService {
         for (let i = 0; i < shuffledIds.length; i++) {
             await this.prisma.queueItem.update({
                 where: { id: shuffledIds[i] },
-                data: { position: i }
+                data: { shufflePosition: i }
             })
         }
 
         return { message: '队列已洗牌' }
     }
 
-    async restoreOriginalOrder(user: any) {
-        const { id: userId } = user
-
-        const queueItems = await this.prisma.queueItem.findMany({
-            where: { userId },
-            select: { id: true, originalPosition: true },
-            orderBy: { originalPosition: 'asc' }
-        })
-
-        if (queueItems.length === 0) {
-            return { message: '队列为空' }
-        }
-
-        // 按原始位置恢复顺序
-        for (let i = 0; i < queueItems.length; i++) {
-            await this.prisma.queueItem.update({
-                where: { id: queueItems[i].id },
-                data: { position: queueItems[i].originalPosition }
-            })
-        }
-
-        return { message: '已恢复原始顺序' }
-    }
-
     private async reorderPositions(userId: number, deletedPosition: number) {
         await this.prisma.queueItem.updateMany({
             where: {
                 userId,
-                position: {
+                shufflePosition: {
                     gt: deletedPosition
                 }
             },
             data: {
-                position: {
+                shufflePosition: {
                     decrement: 1
                 }
             }

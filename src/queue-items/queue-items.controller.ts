@@ -38,10 +38,13 @@ export class QueueItemsController {
     getNextQueueItem(
         @Query('currentSongId')
         currentSongId: string,
+        @Query('playMode')
+        playMode: string = 'shuffle',
         @Req() req: Request
     ) {
         return this.queueItemsService.getNextQueueItem(
             Number(currentSongId),
+            playMode,
             req.user
         )
     }
@@ -50,10 +53,13 @@ export class QueueItemsController {
     getPreviousQueueItem(
         @Query('currentSongId')
         currentSongId: string,
+        @Query('playMode')
+        playMode: string = 'shuffle',
         @Req() req: Request
     ) {
         return this.queueItemsService.getPreviousQueueItem(
             Number(currentSongId),
+            playMode,
             req.user
         )
     }
@@ -84,10 +90,5 @@ export class QueueItemsController {
     @Post('shuffle')
     shuffleQueue(@Req() req: Request) {
         return this.queueItemsService.shuffleQueue(req.user)
-    }
-
-    @Post('restore-order')
-    restoreOriginalOrder(@Req() req: Request) {
-        return this.queueItemsService.restoreOriginalOrder(req.user)
     }
 }
