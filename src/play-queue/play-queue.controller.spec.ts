@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing'
-import { QueueItemsController } from './queue-items.controller'
+import { PlayQueueController } from './play-queue.controller'
 
 describe('PlayQueueController', () => {
-    let controller: QueueItemsController
+    let controller: PlayQueueController
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
-            controllers: [QueueItemsController]
+            controllers: [PlayQueueController]
         }).compile()
 
-        controller = module.get<QueueItemsController>(QueueItemsController)
+        controller = module.get<PlayQueueController>(PlayQueueController)
     })
 
     it('should be defined', () => {

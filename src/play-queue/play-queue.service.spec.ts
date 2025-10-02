@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing'
-import { PlayQueueService } from './queue-items.service'
+import { PlayQueueService } from './play-queue.service'
 
 describe('PlayQueueService', () => {
     let service: PlayQueueService

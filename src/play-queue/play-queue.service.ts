@@ -2,20 +2,20 @@ import { Injectable } from '@nestjs/common'
 import { PrismaService } from 'src/prisma/prisma.service'
 
 @Injectable()
-export class QueueItemsService {
+export class PlayQueueService {
     constructor(private readonly prisma: PrismaService) {}
 
     async addToPlayQueue(songIdList: string[], user: any) {
         const { id: userId } = user
 
         // 检查队列是否为空
-        const queueCount = await this.prisma.queueItem.count({
+        const queueCount = await this.prisma.playQueue.count({
             where: { userId }
         })
 
         const isEmptyQueue = queueCount === 0
 
-        const maxPositionItem = await this.prisma.queueItem.findFirst({
+        const maxPositionItem = await this.prisma.playQueue.findFirst({
             where: { userId },
             orderBy: { shufflePosition: 'desc' }
         })
@@ -34,7 +34,7 @@ export class QueueItemsService {
         }
 
         for (let songId of songsToAdd) {
-            const existingItem = await this.prisma.queueItem.findUnique({
+            const existingItem = await this.prisma.playQueue.findUnique({
                 where: {
                     userId_songId: {
                         userId,
@@ -43,7 +43,7 @@ export class QueueItemsService {
                 }
             })
             if (!existingItem) {
-                await this.prisma.queueItem.create({
+                await this.prisma.playQueue.create({
                     data: {
                         userId,
                         songId,
@@ -71,7 +71,7 @@ export class QueueItemsService {
         }
 
         // 先清空当前队列
-        await this.prisma.queueItem.deleteMany({
+        await this.prisma.playQueue.deleteMany({
             where: { userId }
         })
 
@@ -93,7 +93,7 @@ export class QueueItemsService {
             originalPosition: index
         }))
 
-        await this.prisma.queueItem.createMany({
+        await this.prisma.playQueue.createMany({
             data: queueItems
         })
 
@@ -106,7 +106,7 @@ export class QueueItemsService {
 
     async getPlayQueue(user: any) {
         const { id: userId } = user
-        return this.prisma.queueItem.findMany({
+        return this.prisma.playQueue.findMany({
             where: { userId },
             orderBy: { shufflePosition: 'asc' },
             include: {
@@ -124,7 +124,7 @@ export class QueueItemsService {
     }
 
     async getNextQueueItem(currentSongId: number, playMode: string, user: any) {
-        const currentItem = await this.prisma.queueItem.findUnique({
+        const currentItem = await this.prisma.playQueue.findUnique({
             where: {
                 userId_songId: {
                     userId: user.id,
@@ -148,7 +148,7 @@ export class QueueItemsService {
                 ? currentItem.originalPosition
                 : currentItem.shufflePosition
 
-        const nextSong = await this.prisma.queueItem.findFirst({
+        const nextSong = await this.prisma.playQueue.findFirst({
             where: {
                 userId: user.id,
                 [positionField]: currentPosition + 1
@@ -160,7 +160,7 @@ export class QueueItemsService {
 
         if (!nextSong) {
             // 循环到第一首
-            const firstSong = await this.prisma.queueItem.findFirst({
+            const firstSong = await this.prisma.playQueue.findFirst({
                 where: {
                     userId: user.id
                 },
@@ -181,7 +181,7 @@ export class QueueItemsService {
         playMode: string,
         user: any
     ) {
-        const currentItem = await this.prisma.queueItem.findUnique({
+        const currentItem = await this.prisma.playQueue.findUnique({
             where: {
                 userId_songId: {
                     userId: user.id,
@@ -205,7 +205,7 @@ export class QueueItemsService {
                 ? currentItem.originalPosition
                 : currentItem.shufflePosition
 
-        const previousSong = await this.prisma.queueItem.findFirst({
+        const previousSong = await this.prisma.playQueue.findFirst({
             where: {
                 userId: user.id,
                 [positionField]: currentPosition - 1
@@ -217,7 +217,7 @@ export class QueueItemsService {
 
         if (!previousSong) {
             // 循环到最后一首
-            const lastSong = await this.prisma.queueItem.findFirst({
+            const lastSong = await this.prisma.playQueue.findFirst({
                 where: {
                     userId: user.id
                 },
@@ -236,7 +236,7 @@ export class QueueItemsService {
     async removeFromQueue(queueItemId: number, user: any) {
         const { id: userId } = user
 
-        const queueItem = await this.prisma.queueItem.findFirst({
+        const queueItem = await this.prisma.playQueue.findFirst({
             where: {
                 id: queueItemId,
                 userId
@@ -247,7 +247,7 @@ export class QueueItemsService {
             throw new Error('队列项不存在')
         }
 
-        await this.prisma.queueItem.delete({
+        await this.prisma.playQueue.delete({
             where: {
                 id: queueItemId
             }
@@ -261,7 +261,7 @@ export class QueueItemsService {
     async clearQueue(user: any) {
         const { id: userId } = user
 
-        await this.prisma.queueItem.deleteMany({
+        await this.prisma.playQueue.deleteMany({
             where: { userId }
         })
 
@@ -271,7 +271,7 @@ export class QueueItemsService {
     async updatePosition(queueItemId: number, newPosition: number, user: any) {
         const { id: userId } = user
 
-        const queueItem = await this.prisma.queueItem.findFirst({
+        const queueItem = await this.prisma.playQueue.findFirst({
             where: {
                 id: queueItemId,
                 userId
@@ -285,7 +285,7 @@ export class QueueItemsService {
         const oldPosition = queueItem.shufflePosition
 
         const maxPosition =
-            (await this.prisma.queueItem.count({
+            (await this.prisma.playQueue.count({
                 where: { userId }
             })) - 1
 
@@ -298,7 +298,7 @@ export class QueueItemsService {
         }
 
         if (oldPosition < newPosition) {
-            await this.prisma.queueItem.updateMany({
+            await this.prisma.playQueue.updateMany({
                 where: {
                     userId,
                     shufflePosition: {
@@ -313,7 +313,7 @@ export class QueueItemsService {
                 }
             })
         } else {
-            await this.prisma.queueItem.updateMany({
+            await this.prisma.playQueue.updateMany({
                 where: {
                     userId,
                     shufflePosition: {
@@ -329,7 +329,7 @@ export class QueueItemsService {
             })
         }
 
-        await this.prisma.queueItem.update({
+        await this.prisma.playQueue.update({
             where: {
                 id: queueItemId
             },
@@ -344,7 +344,7 @@ export class QueueItemsService {
     async shuffleQueue(user: any) {
         const { id: userId } = user
 
-        const queueItems = await this.prisma.queueItem.findMany({
+        const queueItems = await this.prisma.playQueue.findMany({
             where: { userId },
             select: { id: true },
             orderBy: { shufflePosition: 'asc' }
@@ -363,7 +363,7 @@ export class QueueItemsService {
 
         // 更新位置
         for (let i = 0; i < shuffledIds.length; i++) {
-            await this.prisma.queueItem.update({
+            await this.prisma.playQueue.update({
                 where: { id: shuffledIds[i] },
                 data: { shufflePosition: i }
             })
@@ -373,7 +373,7 @@ export class QueueItemsService {
     }
 
     private async reorderPositions(userId: number, deletedPosition: number) {
-        await this.prisma.queueItem.updateMany({
+        await this.prisma.playQueue.updateMany({
             where: {
                 userId,
                 shufflePosition: {

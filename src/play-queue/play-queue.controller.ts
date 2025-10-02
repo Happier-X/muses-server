@@ -10,28 +10,28 @@ import {
     Req
 } from '@nestjs/common'
 import { Request } from 'express'
-import { QueueItemsService } from './queue-items.service'
+import { PlayQueueService } from './play-queue.service'
 
-@Controller('queue-items')
-export class QueueItemsController {
-    constructor(private readonly queueItemsService: QueueItemsService) {}
+@Controller('play-queue')
+export class PlayQueueController {
+    constructor(private readonly playQueueService: PlayQueueService) {}
 
     @Post('')
     addToPlayQueue(
         @Body('songIdList') songIdList: string[],
         @Req() req: Request
     ) {
-        return this.queueItemsService.addToPlayQueue(songIdList, req.user)
+        return this.playQueueService.addToPlayQueue(songIdList, req.user)
     }
 
     @Post('add-all')
     addAllSongsToQueue(@Req() req: Request) {
-        return this.queueItemsService.addAllSongsToQueue(req.user)
+        return this.playQueueService.addAllSongsToQueue(req.user)
     }
 
     @Get('')
     getPlayQueue(@Req() req: Request) {
-        return this.queueItemsService.getPlayQueue(req.user)
+        return this.playQueueService.getPlayQueue(req.user)
     }
 
     @Get('next')
@@ -42,7 +42,7 @@ export class QueueItemsController {
         playMode: string = 'shuffle',
         @Req() req: Request
     ) {
-        return this.queueItemsService.getNextQueueItem(
+        return this.playQueueService.getNextQueueItem(
             Number(currentSongId),
             playMode,
             req.user
@@ -57,7 +57,7 @@ export class QueueItemsController {
         playMode: string = 'shuffle',
         @Req() req: Request
     ) {
-        return this.queueItemsService.getPreviousQueueItem(
+        return this.playQueueService.getPreviousQueueItem(
             Number(currentSongId),
             playMode,
             req.user
@@ -66,12 +66,12 @@ export class QueueItemsController {
 
     @Delete(':id')
     removeFromQueue(@Param('id') id: string, @Req() req: Request) {
-        return this.queueItemsService.removeFromQueue(Number(id), req.user)
+        return this.playQueueService.removeFromQueue(Number(id), req.user)
     }
 
     @Delete('')
     clearQueue(@Req() req: Request) {
-        return this.queueItemsService.clearQueue(req.user)
+        return this.playQueueService.clearQueue(req.user)
     }
 
     @Patch(':id/position')
@@ -80,7 +80,7 @@ export class QueueItemsController {
         @Body('newPosition') newPosition: number,
         @Req() req: Request
     ) {
-        return this.queueItemsService.updatePosition(
+        return this.playQueueService.updatePosition(
             Number(id),
             newPosition,
             req.user
@@ -89,6 +89,6 @@ export class QueueItemsController {
 
     @Post('shuffle')
     shuffleQueue(@Req() req: Request) {
-        return this.queueItemsService.shuffleQueue(req.user)
+        return this.playQueueService.shuffleQueue(req.user)
     }
 }
