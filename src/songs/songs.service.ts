@@ -40,7 +40,14 @@ export class SongsService {
         const total = await this.prisma.song.count()
         const songs = await this.prisma.song.findMany({
             skip: (page - 1) * size,
-            take: size
+            take: size,
+            select: {
+                id: true,
+                title: true,
+                artist: true,
+                album: true,
+                cover: true
+            }
         })
         return {
             code: HttpStatus.OK,
