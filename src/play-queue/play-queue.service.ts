@@ -73,9 +73,8 @@ export class PlayQueueService {
     }
 
     async getPlayQueue(user: any) {
-        const { id: userId } = user
         const playQueue = await this.prisma.playQueue.findMany({
-            where: { userId },
+            where: { userId: user.id },
             orderBy: { shufflePosition: 'asc' },
             select: {
                 id: true,
@@ -89,11 +88,20 @@ export class PlayQueueService {
                 }
             }
         })
+        const items = playQueue.map((item) => ({
+            id: String(item.id),
+            song: {
+                id: String(item.song.id),
+                title: item.song.title,
+                artist: item.song.artist,
+                album: item.song.album
+            }
+        }))
         return {
             code: 200,
             message: '获取播放队列成功',
             data: {
-                items: playQueue
+                items
             }
         }
     }
@@ -148,7 +156,7 @@ export class PlayQueueService {
             code: 200,
             message: '获取下一首成功',
             data: {
-                songId: nextSong?.songId
+                songId: String(nextSong?.songId)
             }
         }
     }
@@ -210,7 +218,7 @@ export class PlayQueueService {
             code: 200,
             message: '获取上一首成功',
             data: {
-                songId: previousSong?.songId
+                songId: String(previousSong?.songId)
             }
         }
     }
