@@ -5,122 +5,97 @@ import { PrismaService } from 'src/prisma/prisma.service'
 export class PlayQueueService {
     constructor(private readonly prisma: PrismaService) {}
 
-    async addToPlayQueue(songIdList: string[], user: any) {
-        const { id: userId } = user
+    private shuffle(arr) {
+        const shuffledArr = [...arr]
+        for (let i = shuffledArr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1))
+            ;[shuffledArr[i], shuffledArr[j]] = [shuffledArr[j], shuffledArr[i]]
+        }
+        return shuffledArr
+    }
 
-        // 检查队列是否为空
-        const queueCount = await this.prisma.playQueue.count({
-            where: { userId }
-        })
-
-        const isEmptyQueue = queueCount === 0
-
+    async addToPlayQueue(songIds: string, user: any) {
         const maxPositionItem = await this.prisma.playQueue.findFirst({
-            where: { userId },
-            orderBy: { shufflePosition: 'desc' }
+            where: { userId: user.id },
+            orderBy: { originalPosition: 'desc' }
         })
         let nextPosition = maxPositionItem
-            ? maxPositionItem.shufflePosition + 1
+            ? maxPositionItem.originalPosition + 1
             : 0
-
-        // 如果队列为空，先随机化歌曲顺序
-        let songsToAdd = songIdList.map((id) => parseInt(id))
-        if (isEmptyQueue && songsToAdd.length > 1) {
-            // Fisher-Yates 洗牌算法
-            for (let i = songsToAdd.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1))
-                ;[songsToAdd[i], songsToAdd[j]] = [songsToAdd[j], songsToAdd[i]]
-            }
-        }
-
-        for (let songId of songsToAdd) {
-            const existingItem = await this.prisma.playQueue.findUnique({
+        const songIdList = songIds.split(',')
+        const data = songIdList.map((songId, index) => ({
+            userId: user.id,
+            songId: Number(songId),
+            originalPosition: nextPosition + index,
+            shufflePosition: nextPosition + index
+        }))
+        for (const item of data) {
+            await this.prisma.playQueue.upsert({
                 where: {
                     userId_songId: {
-                        userId,
-                        songId
+                        userId: item.userId,
+                        songId: item.songId
                     }
-                }
+                },
+                update: {},
+                create: item
             })
-            if (!existingItem) {
-                await this.prisma.playQueue.create({
-                    data: {
-                        userId,
-                        songId,
-                        shufflePosition: nextPosition,
-                        originalPosition: nextPosition
-                    }
-                })
-                nextPosition++
-            }
         }
-        return { message: '添加成功' }
+        return {
+            code: 200,
+            message: '添加成功'
+        }
     }
 
     async addAllSongsToQueue(user: any) {
-        const { id: userId } = user
-
-        // 获取所有歌曲
+        await this.prisma.playQueue.deleteMany({
+            where: { userId: user.id }
+        })
         const allSongs = await this.prisma.song.findMany({
             select: { id: true },
             orderBy: { id: 'asc' }
         })
-
-        if (allSongs.length === 0) {
-            return { message: '没有可添加的歌曲' }
-        }
-
-        // 先清空当前队列
-        await this.prisma.playQueue.deleteMany({
-            where: { userId }
-        })
-
-        // 随机化歌曲顺序 (Fisher-Yates 洗牌算法)
-        const shuffledSongs = [...allSongs]
-        for (let i = shuffledSongs.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1))
-            ;[shuffledSongs[i], shuffledSongs[j]] = [
-                shuffledSongs[j],
-                shuffledSongs[i]
-            ]
-        }
-
-        // 批量创建队列项
-        const queueItems = shuffledSongs.map((song, index) => ({
-            userId,
-            songId: song.id,
-            shufflePosition: index,
-            originalPosition: index
-        }))
-
+        const shuffledAllSongs = this.shuffle(allSongs)
         await this.prisma.playQueue.createMany({
-            data: queueItems
+            data: shuffledAllSongs.map((song, index) => ({
+                userId: user.id,
+                songId: song.id,
+                shufflePosition: index,
+                originalPosition: allSongs.findIndex(
+                    (item) => item.id === song.id
+                )
+            }))
         })
-
         return {
             code: 200,
-            message: '添加成功',
-            count: allSongs.length
+            message: '添加成功'
         }
     }
 
     async getPlayQueue(user: any) {
         const { id: userId } = user
-        return this.prisma.playQueue.findMany({
+        const playQueue = await this.prisma.playQueue.findMany({
             where: { userId },
             orderBy: { shufflePosition: 'asc' },
-            include: {
+            select: {
+                id: true,
                 song: {
                     select: {
+                        id: true,
                         title: true,
                         artist: true,
-                        album: true,
-                        cover: true,
-                        duration: true
+                        album: true
                     }
                 }
             }
         })
+        return {
+            code: 200,
+            message: '获取播放队列成功',
+            data: {
+                items: playQueue
+            }
+        }
     }
 
     async getNextQueueItem(currentSongId: number, playMode: string, user: any) {
@@ -142,9 +117,9 @@ export class PlayQueueService {
 
         // 根据播放模式选择使用的位置字段
         const positionField =
-            playMode === 'order' ? 'originalPosition' : 'shufflePosition'
+            playMode === 'orderPlay' ? 'originalPosition' : 'shufflePosition'
         const currentPosition =
-            playMode === 'order'
+            playMode === 'orderPlay'
                 ? currentItem.originalPosition
                 : currentItem.shufflePosition
 
@@ -199,9 +174,9 @@ export class PlayQueueService {
 
         // 根据播放模式选择使用的位置字段
         const positionField =
-            playMode === 'order' ? 'originalPosition' : 'shufflePosition'
+            playMode === 'orderPlay' ? 'originalPosition' : 'shufflePosition'
         const currentPosition =
-            playMode === 'order'
+            playMode === 'orderPlay'
                 ? currentItem.originalPosition
                 : currentItem.shufflePosition
 

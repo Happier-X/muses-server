@@ -3,6 +3,8 @@ import {
     Controller,
     Delete,
     Get,
+    HttpCode,
+    HttpStatus,
     Param,
     Patch,
     Post,
@@ -17,14 +19,13 @@ export class PlayQueueController {
     constructor(private readonly playQueueService: PlayQueueService) {}
 
     @Post('')
-    addToPlayQueue(
-        @Body('songIdList') songIdList: string[],
-        @Req() req: Request
-    ) {
-        return this.playQueueService.addToPlayQueue(songIdList, req.user)
+    @HttpCode(HttpStatus.OK)
+    addToPlayQueue(@Body('songIds') songIds: string, @Req() req: Request) {
+        return this.playQueueService.addToPlayQueue(songIds, req.user)
     }
 
     @Post('add-all')
+    @HttpCode(HttpStatus.OK)
     addAllSongsToQueue(@Req() req: Request) {
         return this.playQueueService.addAllSongsToQueue(req.user)
     }
@@ -39,7 +40,7 @@ export class PlayQueueController {
         @Query('currentSongId')
         currentSongId: string,
         @Query('playMode')
-        playMode: string = 'shuffle',
+        playMode: string,
         @Req() req: Request
     ) {
         return this.playQueueService.getNextQueueItem(
@@ -54,7 +55,7 @@ export class PlayQueueController {
         @Query('currentSongId')
         currentSongId: string,
         @Query('playMode')
-        playMode: string = 'shuffle',
+        playMode: string,
         @Req() req: Request
     ) {
         return this.playQueueService.getPreviousQueueItem(
