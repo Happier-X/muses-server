@@ -114,28 +114,25 @@ export class PlayQueueService {
         if (!currentItem) {
             return null
         }
-
-        // 根据播放模式选择使用的位置字段
         const positionField =
             playMode === 'orderPlay' ? 'originalPosition' : 'shufflePosition'
-        const currentPosition =
-            playMode === 'orderPlay'
-                ? currentItem.originalPosition
-                : currentItem.shufflePosition
-
-        const nextSong = await this.prisma.playQueue.findFirst({
+        const currentPosition = currentItem[positionField]
+        let nextSong = await this.prisma.playQueue.findFirst({
             where: {
                 userId: user.id,
-                [positionField]: currentPosition + 1
+                [positionField]: {
+                    gt: currentPosition
+                }
+            },
+            orderBy: {
+                [positionField]: 'asc'
             },
             select: {
                 songId: true
             }
         })
-
         if (!nextSong) {
-            // 循环到第一首
-            const firstSong = await this.prisma.playQueue.findFirst({
+            nextSong = await this.prisma.playQueue.findFirst({
                 where: {
                     userId: user.id
                 },
@@ -146,9 +143,14 @@ export class PlayQueueService {
                     songId: true
                 }
             })
-            return firstSong?.songId || null
         }
-        return nextSong.songId
+        return {
+            code: 200,
+            message: '获取下一首成功',
+            data: {
+                songId: nextSong?.songId
+            }
+        }
     }
 
     async getPreviousQueueItem(
@@ -171,19 +173,19 @@ export class PlayQueueService {
         if (!currentItem) {
             return null
         }
-
-        // 根据播放模式选择使用的位置字段
         const positionField =
             playMode === 'orderPlay' ? 'originalPosition' : 'shufflePosition'
-        const currentPosition =
-            playMode === 'orderPlay'
-                ? currentItem.originalPosition
-                : currentItem.shufflePosition
+        const currentPosition = currentItem[positionField]
 
-        const previousSong = await this.prisma.playQueue.findFirst({
+        let previousSong = await this.prisma.playQueue.findFirst({
             where: {
                 userId: user.id,
-                [positionField]: currentPosition - 1
+                [positionField]: {
+                    lt: currentPosition
+                }
+            },
+            orderBy: {
+                [positionField]: 'desc'
             },
             select: {
                 songId: true
@@ -192,7 +194,7 @@ export class PlayQueueService {
 
         if (!previousSong) {
             // 循环到最后一首
-            const lastSong = await this.prisma.playQueue.findFirst({
+            previousSong = await this.prisma.playQueue.findFirst({
                 where: {
                     userId: user.id
                 },
@@ -203,9 +205,14 @@ export class PlayQueueService {
                     songId: true
                 }
             })
-            return lastSong?.songId || null
         }
-        return previousSong.songId
+        return {
+            code: 200,
+            message: '获取上一首成功',
+            data: {
+                songId: previousSong?.songId
+            }
+        }
     }
 
     async removeFromQueue(queueItemId: number, user: any) {
