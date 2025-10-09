@@ -106,12 +106,12 @@ export class PlayQueueService {
         }
     }
 
-    async getNextQueueItem(currentSongId: number, playMode: string, user: any) {
+    async getNextQueueItem(currentSongId: string, playMode: string, user: any) {
         const currentItem = await this.prisma.playQueue.findUnique({
             where: {
                 userId_songId: {
                     userId: user.id,
-                    songId: currentSongId
+                    songId: Number(currentSongId)
                 }
             },
             select: {
@@ -162,7 +162,7 @@ export class PlayQueueService {
     }
 
     async getPreviousQueueItem(
-        currentSongId: number,
+        currentSongId: string,
         playMode: string,
         user: any
     ) {
@@ -170,7 +170,7 @@ export class PlayQueueService {
             where: {
                 userId_songId: {
                     userId: user.id,
-                    songId: currentSongId
+                    songId: Number(currentSongId)
                 }
             },
             select: {
@@ -223,12 +223,12 @@ export class PlayQueueService {
         }
     }
 
-    async removeFromQueue(queueItemId: number, user: any) {
+    async removeFromQueue(queueItemId: string, user: any) {
         const { id: userId } = user
 
         const queueItem = await this.prisma.playQueue.findFirst({
             where: {
-                id: queueItemId,
+                id: Number(queueItemId),
                 userId
             }
         })
@@ -239,7 +239,7 @@ export class PlayQueueService {
 
         await this.prisma.playQueue.delete({
             where: {
-                id: queueItemId
+                id: Number(queueItemId)
             }
         })
 
@@ -258,12 +258,12 @@ export class PlayQueueService {
         return { message: '清空队列成功' }
     }
 
-    async updatePosition(queueItemId: number, newPosition: number, user: any) {
+    async updatePosition(queueItemId: string, newPosition: number, user: any) {
         const { id: userId } = user
 
         const queueItem = await this.prisma.playQueue.findFirst({
             where: {
-                id: queueItemId,
+                id: Number(queueItemId),
                 userId
             }
         })
@@ -321,7 +321,7 @@ export class PlayQueueService {
 
         await this.prisma.playQueue.update({
             where: {
-                id: queueItemId
+                id: Number(queueItemId)
             },
             data: {
                 shufflePosition: newPosition

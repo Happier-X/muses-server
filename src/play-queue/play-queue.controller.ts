@@ -44,7 +44,7 @@ export class PlayQueueController {
         @Req() req: Request
     ) {
         return this.playQueueService.getNextQueueItem(
-            Number(currentSongId),
+            currentSongId,
             playMode,
             req.user
         )
@@ -59,7 +59,7 @@ export class PlayQueueController {
         @Req() req: Request
     ) {
         return this.playQueueService.getPreviousQueueItem(
-            Number(currentSongId),
+            currentSongId,
             playMode,
             req.user
         )
@@ -67,7 +67,7 @@ export class PlayQueueController {
 
     @Delete(':id')
     removeFromQueue(@Param('id') id: string, @Req() req: Request) {
-        return this.playQueueService.removeFromQueue(Number(id), req.user)
+        return this.playQueueService.removeFromQueue(id, req.user)
     }
 
     @Delete('')
@@ -81,11 +81,7 @@ export class PlayQueueController {
         @Body('newPosition') newPosition: number,
         @Req() req: Request
     ) {
-        return this.playQueueService.updatePosition(
-            Number(id),
-            newPosition,
-            req.user
-        )
+        return this.playQueueService.updatePosition(id, newPosition, req.user)
     }
 
     @Post('shuffle')

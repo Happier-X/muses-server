@@ -19,8 +19,8 @@ export class SongsController {
     }
 
     @Get('stream')
-    getStreamById(@Query('id') id: string) {
-        return this.songsService.getStreamById(Number(id))
+    getSongStream(@Query('songId') songId: string) {
+        return this.songsService.getSongStream(songId)
     }
 
     @Get('')
@@ -43,6 +43,6 @@ export class SongsController {
 
     @Get('detail')
     getSongDetail(@Query('songId') songId: string) {
-        return this.songsService.getSongDetail(Number(songId))
+        return this.songsService.getSongDetail(songId)
     }
 }

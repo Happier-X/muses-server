@@ -21,8 +21,10 @@ export class SongsService {
     }
 
     // 获取歌曲流
-    async getStreamById(id: number): Promise<StreamableFile> {
-        const song = await this.prisma.song.findUnique({ where: { id } })
+    async getSongStream(songId: string): Promise<StreamableFile> {
+        const song = await this.prisma.song.findUnique({
+            where: { id: Number(songId) }
+        })
         if (!song) {
             throw new Error('Song not found')
         }
@@ -49,11 +51,12 @@ export class SongsService {
                 cover: true
             }
         })
+        const items = songs.map((item) => ({ ...item, id: String(item.id) }))
         return {
             code: HttpStatus.OK,
             message: '获取歌曲列表成功',
             data: {
-                items: songs,
+                items,
                 pagination: {
                     page,
                     size,
@@ -86,11 +89,20 @@ export class SongsService {
     // }
 
     // 获取歌曲详情
-    async getSongDetail(songId: number) {
+    async getSongDetail(songId: string) {
+        const song = await this.prisma.song.findUnique({
+            where: { id: Number(songId) }
+        })
+        if (!song) {
+            throw new Error('查询歌曲详情失败，歌曲不存在')
+        }
         return {
             code: HttpStatus.OK,
             message: '获取歌曲详情成功',
-            data: await this.prisma.song.findUnique({ where: { id: songId } })
+            data: {
+                ...song,
+                id: String(song.id)
+            }
         }
     }
 }
