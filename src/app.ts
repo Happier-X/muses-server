@@ -1,6 +1,7 @@
 import { join } from 'node:path'
 import AutoLoad, { AutoloadPluginOptions } from '@fastify/autoload'
 import { FastifyPluginAsync, FastifyServerOptions } from 'fastify'
+import prismaPlugin from './plugins/prisma'
 
 export interface AppOptions extends FastifyServerOptions, Partial<AutoloadPluginOptions> {
 
@@ -13,9 +14,8 @@ const app: FastifyPluginAsync<AppOptions> = async (
   fastify,
   opts
 ): Promise<void> => {
-  // Place here your custom code!
-
-  // Do not touch the following lines
+  // 注册 Prisma 插件
+  await fastify.register(prismaPlugin)
 
   // This loads all plugins defined in plugins
   // those should be support plugins that are reused
