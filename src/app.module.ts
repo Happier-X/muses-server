@@ -7,8 +7,6 @@ import { AuthModule } from './auth/auth.module'
 import { UsersModule } from './users/users.module'
 import { SongsModule } from './songs/songs.module'
 import { UtilsModule } from './utils/utils.module'
-import { PlayQueueModule } from './play-queue/play-queue.module'
-import { PlayRecordsModule } from './play-records/play-records.module'
 
 @Module({
     imports: [
@@ -17,9 +15,7 @@ import { PlayRecordsModule } from './play-records/play-records.module'
         AuthModule,
         UsersModule,
         SongsModule,
-        UtilsModule,
-        PlayQueueModule,
-        PlayRecordsModule
+        UtilsModule
     ],
     controllers: [AppController],
     providers: [AppService]

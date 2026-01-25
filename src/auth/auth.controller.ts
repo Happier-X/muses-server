@@ -5,11 +5,10 @@ import {
     HttpCode,
     HttpStatus,
     Post,
-    Res,
     Req,
     UseGuards
 } from '@nestjs/common'
-import { Request, Response } from 'express'
+import { FastifyRequest } from 'fastify'
 import { AuthService } from './auth.service'
 import { Public } from './decorator/auth.decorator'
 import { RegisterDto } from './dto/register.dto'
@@ -23,7 +22,7 @@ export class AuthController {
     @UseGuards(LocalAuthGuard)
     @Post('login')
     @HttpCode(HttpStatus.OK)
-    login(@Req() req: Request) {
+    login(@Req() req: FastifyRequest) {
         return this.authService.login(req.user)
     }
 
@@ -35,7 +34,7 @@ export class AuthController {
 
     @Public()
     @Get('refresh-token')
-    refreshToken(@Req() req: Request) {
+    refreshToken(@Req() req: FastifyRequest) {
         return this.authService.refreshToken(
             req.headers['refresh-token'] as string
         )

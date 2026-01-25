@@ -19,8 +19,6 @@ model User {
   username  String   @unique
   password  String
   role      String   @default("user")
-  playQueue PlayQueue[]
-  playRecord PlayRecord[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -33,44 +31,15 @@ model Song {
   lyric       Json
   cover       String
   duration    Int
-  filePath    String   
-  fileHash    String  
+  filePath    String
+  fileHash    String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   @@unique([filePath,fileHash])
-  playQueue PlayQueue[]
-  playRecord PlayRecord[]
 }
 
 model Config {
   id    Int    @id @default(autoincrement())
   key   String @unique
   value String
-}
-
-model PlayQueue{
-  id Int @id @default(autoincrement())
-  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
-  userId Int
-  song Song @relation(fields:[songId],references:[id],onDelete:Cascade)
-  songId Int
-  shufflePosition Int
-  originalPosition Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  @@unique([userId,songId])
-  @@index([userId, shufflePosition])
-}
-
-model PlayRecord{
-  id Int @id @default(autoincrement())
-  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
-  userId Int
-  song Song @relation(fields:[songId],references:[id],onDelete:Cascade)
-  songId Int
-  playCount Int @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  @@unique([userId,songId])
-  @@index([playCount])
 }
