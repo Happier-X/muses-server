@@ -8,7 +8,7 @@ WORKDIR /app
 COPY . .
 
 # 设置环境变量
-ENV DATABASE_URL="file:./prisma/dev.db"
+ENV DATABASE_URL="file:./data/data.db"
 
 # 构建应用
 RUN npm install && \
