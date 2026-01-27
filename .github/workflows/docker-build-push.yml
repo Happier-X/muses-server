@@ -22,7 +22,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/muses-server
+          images: happierx/muses
           tags: |
             type=raw,value=latest          # ← 新增：每次都打 latest
             type=sha,prefix={{branch}}-    # ← 原有：带 git 短 sha 的标签，可保留
