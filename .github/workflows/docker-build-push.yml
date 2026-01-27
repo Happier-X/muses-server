@@ -24,8 +24,8 @@ jobs:
         with:
           images: happierx/muses
           tags: |
-            type=raw,value=latest          # ← 新增：每次都打 latest
-            type=sha,prefix={{branch}}-    # ← 原有：带 git 短 sha 的标签，可保留
+            type=semver,pattern={{version}}
+            type=raw,value=latest
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
