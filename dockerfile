@@ -19,4 +19,4 @@ COPY --from=builder /usr/src/app/dist ./dist
 EXPOSE 3000
 
 # 启动应用
-CMD ["node", "dist/main"]
+CMD ["node", "main"]
