@@ -6,8 +6,6 @@ dist
 .out
 build
 
-# 生成的文件
-generated
 
 # 测试相关
 test
