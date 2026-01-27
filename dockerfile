@@ -12,7 +12,9 @@ RUN npx prisma generate && npm run build
 
 FROM node:20-alpine
 
-WORKDIR /usr/src/app/dist ./dist
+WORKDIR /usr/src/app/dist
+
+COPY --from=builder /usr/src/app/dist ./dist
 
 EXPOSE 3000
 
