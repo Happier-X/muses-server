@@ -12,5 +12,4 @@ RUN npx prisma generate && npm run build
 
 EXPOSE 3000
 
-# 启动应用
-CMD ["node", "dist/src/main"]
+CMD ["sh", "-c", "npx prisma db push && node dist/src/main"]
