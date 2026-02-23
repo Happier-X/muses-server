@@ -1,12 +1,28 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: muses-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: zhf@zhf520
+      POSTGRES_DB: muses
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+
   muses:
     image: happierx/muses
     container_name: muses
     ports:
       - '3000:3000'
     environment:
-      - DATABASE_URL=file:/app/data/data.db
+      - DATABASE_URL=postgresql://postgres:zhf%40zhf520@postgres:5432/muses?schema=public
       - JWT_SECRET=muses-secret
     volumes:
-      - ./data:/app/data
       - /your/local/music/path:/app/music
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:

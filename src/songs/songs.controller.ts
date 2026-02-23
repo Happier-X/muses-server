@@ -31,16 +31,6 @@ export class SongsController {
         return this.songsService.getSongs(page, size)
     }
 
-    // @Post('play-count')
-    // addPlayCount(@Body('id') id: string) {
-    //     return this.songsService.addPlayCount(Number(id))
-    // }
-
-    // @Get('minPlayCountSong')
-    // getMinPlayCountSong(@Query('ids') ids: string) {
-    //     return this.songsService.getMinPlayCountSong(ids)
-    // }
-
     @Get('detail')
     getSongDetail(@Query('songId') songId: string) {
         return this.songsService.getSongDetail(songId)

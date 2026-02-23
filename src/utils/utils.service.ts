@@ -7,7 +7,6 @@ import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import { PrismaService } from 'src/prisma/prisma.service'
 import { MUSIC_EXTENSIONS } from 'src/utils/musicExtensions'
-import { uint8ArrayToBase64 } from 'uint8array-extras'
 
 // 音乐信息接口
 interface MusicInfo {
